@@ -4,7 +4,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "node --watch src/index.js",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "node --test 'src/**/*.test.js'",
     "migrate": "node-pg-migrate up",
     "migrate:down": "node-pg-migrate down",
     "seed": "node src/db/seed.js"

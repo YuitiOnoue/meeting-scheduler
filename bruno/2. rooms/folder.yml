@@ -1,6 +1,4 @@
 info:
-  name: rooms
+  name: 2. rooms
   type: folder
   seq: 1
-
-request: {}
