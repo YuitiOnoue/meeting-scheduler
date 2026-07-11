@@ -1,17 +1,7 @@
-import 'dotenv/config';
-import express from 'express';
 import { pool } from './db.js';
-import roomsRouter from './routes/rooms.js';
+import app from './app.js';
 
-const app = express();
 const PORT = process.env.PORT ?? 3000;
-
-app.use(express.json());
-app.use('/rooms', roomsRouter);
-
-app.get('/health', (_req, res) => {
-  res.json({ status: 'ok' });
-});
 
 pool
   .query('SELECT 1')
