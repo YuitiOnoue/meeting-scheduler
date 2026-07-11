@@ -15,6 +15,10 @@ http:
       }
   auth: inherit
 
+script:
+  post-respose: |
+  bru.setEnvVar("token", res.body.token);
+
 settings:
   encodeUrl: true
   timeout: 0
