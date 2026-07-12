@@ -1,0 +1,20 @@
+info:
+  name: getAvailability
+  type: http
+  seq: 7
+
+http:
+  method: GET
+  url: '{{baseUrl}}/rooms/available?date={{date}}&startTime={{startTime}}&endTime={{endTime}}'
+  auth: inherit
+
+runtime:
+  scripts:
+    - type: after-response
+      code: bru.setEnvVar("roomId", res.body[0].id);
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

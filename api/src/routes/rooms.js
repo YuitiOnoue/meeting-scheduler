@@ -8,6 +8,22 @@ router.get('/', async (_req, res) => {
   res.json(rows);
 });
 
+router.get('/available', async (req, res) => {
+  const { date, startTime, endTime } = req.query;
+  const { rows } = await pool.query(
+    `SELECT * FROM rooms
+    WHERE id NOT IN (
+      SELECT room_id FROM reservations
+      WHERE date = $1
+        AND start_time < $2
+        AND end_time > $3
+    )
+    ORDER BY name`,
+    [date, endTime, startTime],
+  );
+  res.json(rows);
+});
+
 router.get('/:id', async (req, res) => {
   const { rows } = await pool.query('SELECT * FROM rooms WHERE id = $1', [
     req.params.id,
