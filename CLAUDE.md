@@ -154,7 +154,7 @@ Steps:
 3. Serve as `image/png` buffer response
 4. Test by opening the URL in the browser — scan with phone to verify redirect
 
-### Phase 4 — Docker: Containerize the API
+### Phase 5 — Docker: Containerize the API
 **Concepts:** Dockerfile, image layers, `.dockerignore`, ARG/ENV, port mapping
 
 Steps:
@@ -163,7 +163,7 @@ Steps:
 3. Build and run: `docker build` → `docker run -p 3000:3000`
 4. Mount `src/data/` as a volume so JSON files persist between container restarts
 
-### Phase 5 — Angular: Project Setup & Dashboard
+### Phase 6 — Angular: Project Setup & Dashboard
 **Concepts:** Angular CLI, components, services, `HttpClient`, `*ngFor`, `*ngIf`, pipes
 
 Steps:
@@ -172,7 +172,7 @@ Steps:
 3. Build `DashboardComponent` — card grid showing each room's status (free/busy/capacity)
 4. Add a `RoomStatusPipe` to compute and format current occupancy
 
-### Phase 6 — Angular: Room Detail & Booking Form
+### Phase 7 — Angular: Room Detail & Booking Form
 **Concepts:** Reactive forms, route params, form validation, conditional UI
 
 Steps:
@@ -181,7 +181,7 @@ Steps:
 3. Add client-side validation (end > start, required fields)
 4. On submit, call `POST /reservations` and redirect back to room detail on success
 
-### Phase 7 — Angular: QR Door Card & Search View
+### Phase 8 — Angular: QR Door Card & Search View
 **Concepts:** `<img>` binding to API URL, print CSS, query params in routing
 
 Steps:
@@ -193,7 +193,7 @@ Steps:
    - Date picker + start/end hour selectors
    - On search, call `GET /rooms/available` and display matching rooms as cards
 
-### Phase 8 — Docker Compose: Full Stack
+### Phase 9 — Docker Compose: Full Stack
 **Concepts:** `docker-compose.yml`, service networking, build context, volumes, depends_on
 
 Steps:
