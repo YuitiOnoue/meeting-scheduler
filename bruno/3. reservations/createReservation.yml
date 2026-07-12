@@ -1,0 +1,33 @@
+info:
+  name: createReservation
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: '{{baseUrl}}/reservations'
+  body:
+    type: json
+    data: |2-
+        {
+          "roomId": "{{roomId}}",
+          "title": "Another meeting",
+          "date": "{{date}}",
+          "startTime": "{{startTime}}",
+          "endTime": "{{endTime}}"
+        }
+  auth:
+    type: bearer
+    bearer:
+      token: '{{token}}'
+
+runtime:
+  scripts:
+    - type: after-response
+      code: bru.setEnvVar("roomId", res.body.id);
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
