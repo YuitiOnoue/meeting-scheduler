@@ -17,12 +17,18 @@ A study project to learn Node.js, Angular, and Docker by building a full-stack m
 | Database  | PostgreSQL              |
 | Infra     | Docker + docker-compose |
 
-## Project Structure (target)
+## Project Structure
+
 ```
 meeting-scheduler/
-├── api/          # Node.js/Express backend
-├── web/          # Angular frontend
-└── docker-compose.yml
+├── api/                      # Node.js/Express backend (built directly on Postgres, not JSON files)
+│   ├── migrations/           # node-pg-migrate migrations
+│   └── src/
+│       ├── routes/           # rooms.js, auth.js, reservations.js
+│       ├── middleware/       # authenticate.js
+│       └── db/                # db.js (pg Pool), schema.sql, seed.js
+├── web/                      # Angular frontend — not started yet (target)
+└── docker-compose.yml        # currently only defines the `db` service — api/ui services are target (Phase 9)
 ```
 
 ### Features
@@ -111,39 +117,48 @@ meeting-scheduler/
 
 ## Phases
 
-### Phase 1 — Node.js: Project Setup & Room Routes
-**Concepts:** npm init, Express, folder structure, routing, JSON middleware, nodemon, dotenv
+> **Note:** Phases 1–3 originally planned a JSON-file data layer (`rooms.json`/`users.json`/`reservations.json` under `src/data/`, read via `fs/promises`). The actual implementation pivoted to PostgreSQL from the start (matching the Tech Stack table above). The steps below have been updated to reflect what was actually built. See "Known gaps (deferred)" after Phase 3 for open items to pick up later.
 
-Steps:
-1. Create `meeting-scheduler/api/` folder, run `npm init`
-2. Install `express`, `nodemon`, `dotenv`, `uuid`
-3. Create structure: `src/routes/`, `src/controllers/`, `src/data/`
-4. Seed `rooms.json` with 4–5 sample rooms
-5. Implement `GET /rooms` and `GET /rooms/:id`
-6. Add `npm run dev` with nodemon
+### Phase 1 — Node.js: Project Setup & Room Routes ✅ done (on Postgres)
+**Concepts:** npm init, Express, routing, dotenv, Postgres, migrations
 
-### Phase 2 — Node.js: Authentication & JWT
+Steps (as actually implemented):
+1. Created `meeting-scheduler/api/` folder, ran `npm init`
+2. Installed `express`, `dotenv`, `pg`, `node-pg-migrate` (no `nodemon`/`uuid` — `npm run dev` uses `node --watch src/index.js`, and Postgres generates UUIDs via `pgcrypto`)
+3. Structure used: `src/routes/`, `src/db/` (`db.js`, `schema.sql`, `seed.js`), `migrations/` (not `src/controllers/`/`src/data/`)
+4. Seeded 6 rooms into Postgres via `src/db/seed.js` (`npm run seed`)
+5. Implemented `GET /rooms` and `GET /rooms/:id` in `src/routes/rooms.js` (also `POST`/`PUT`/`DELETE /rooms`, ahead of the original Phase 1 scope)
+6. `npm run dev` runs `node --watch src/index.js` for auto-restart
 
-**Concepts:** bcrypt, JWT, middleware, protected routes, role-based access
+### Phase 2 — Node.js: Authentication & JWT ✅ mostly done
 
-Steps:
+**Concepts:** bcryptjs, JWT, middleware, protected routes, role-based access
 
-1. Install `bcrypt`, `jsonwebtoken`
-2. Seed `users.json` with one admin and one regular user
-3. Implement `POST /auth/register` — hash password with bcrypt, save user
-4. Implement `POST /auth/login` — verify password, return signed JWT
-5. Implement `GET /auth/me` — protected route using an `authenticate` middleware
-6. Add role-checking middleware for admin-only routes (room creation/deletion)
+Steps (as actually implemented):
 
-### Phase 3 — Node.js: Reservations & Availability Logic
-**Concepts:** async file I/O with `fs/promises`, business logic, query params, conflict detection
+1. Installed `bcryptjs` (not `bcrypt`), `jsonwebtoken`
+2. `src/db/seed.js` seeds one admin user into Postgres; there is no seeded regular user — regular users are expected to self-register via `POST /auth/register`
+3. Implemented `POST /auth/register` — hash password with bcryptjs, save user
+4. Implemented `POST /auth/login` — verify password, return signed JWT
+5. Implemented `GET /auth/me` — protected route using `src/middleware/authenticate.js` (has unit tests)
+6. **Not yet implemented (deferred):** role-checking middleware for admin-only routes — see "Known gaps" below
 
-Steps:
-1. Seed `reservations.json`
-2. Implement `POST /reservations` with hour-conflict validation (no double booking)
-3. Implement `DELETE /reservations/:id`
-4. Implement `GET /rooms/available?date=&startHour=&endHour=` — filter rooms with no conflicting reservations
-5. Implement `GET /reservations?roomId=&date=` for the room detail view
+### Phase 3 — Node.js: Reservations & Availability Logic ✅ done
+**Concepts:** SQL queries via `pg`, business logic, query params, conflict detection
+
+Steps (as actually implemented):
+1. No reservation seed data — reservations are created live through the API
+2. Implemented `POST /reservations` in `src/routes/reservations.js` with a half-open-interval overlap conflict check (409 on conflict), auth-protected
+3. Implemented `DELETE /reservations/:id` — auth-protected, but currently restricted to the reservation's own owner (see "Known gaps")
+4. Implemented `GET /rooms/available?date=&startTime=&endTime=` — reuses the same overlap-exclusion query
+5. Implemented `GET /reservations?roomId=&date=` for the room detail view (note: there is no "list all" mode — calling it without both query params returns an empty result, not all reservations)
+
+## Known gaps (deferred)
+
+These were found during the Phase 1–3 audit and intentionally deferred rather than fixed, to keep moving on Phase 4:
+- **No admin-role-check middleware exists.** `POST/PUT/DELETE /rooms` are completely unauthenticated/unrestricted, and `DELETE /reservations/:id` only allows the owning user — admins cannot yet create the intended "cancel others' reservations" capability. Needs a `requireAdmin` (or similar) middleware applied to the right routes.
+- **`POST /auth/register` accepts a client-supplied `role`** with no restriction, so a caller can self-assign `role: "admin"`.
+- **No `.env.example` committed** — a fresh clone needs `DB_HOST`/`DB_PORT`/`DB_USER`/`DB_PASSWORD`/`DB_NAME` and `JWT_SECRET` set manually before `npm run dev`/`npm run migrate`/`npm run seed` will work.
 
 ### Phase 4 — Node.js: QR Code Generation
 **Concepts:** npm packages, binary responses, URL design
