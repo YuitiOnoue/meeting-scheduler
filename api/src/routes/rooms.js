@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { pool } from '../db.js';
+import QRCode from 'qrcode';
 
 const router = Router();
 
@@ -31,6 +32,18 @@ router.get('/:id', async (req, res) => {
   if (rows.length === 0)
     return res.status(404).json({ error: 'Room not found' });
   res.json(rows[0]);
+});
+
+router.get('/:id/qrcode', async (req, res) => {
+  const { rows } = await pool.query('SELECT * FROM rooms WHERE id = $1', [
+    req.params.id,
+  ]);
+  if (rows.length === 0)
+    return res.status(404).json({ error: 'Room not found' });
+
+  const bookingUrl = `${process.env.FRONTEND_URL}/rooms/${req.params.id}/book`;
+  const buffer = await QRCode.toBuffer(bookingUrl);
+  res.type('image/png').send(buffer);
 });
 
 router.post('/', async (req, res) => {
