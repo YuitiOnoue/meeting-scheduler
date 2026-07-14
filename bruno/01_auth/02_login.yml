@@ -1,7 +1,7 @@
 info:
   name: login
   type: http
-  seq: 1
+  seq: 2
 
 http:
   method: POST
@@ -15,9 +15,10 @@ http:
       }
   auth: inherit
 
-script:
-  post-respose: |
-  bru.setEnvVar("token", res.body.token);
+runtime:
+  scripts:
+    - type: after-response
+      code: bru.setEnvVar("token", res.body.token);
 
 settings:
   encodeUrl: true
