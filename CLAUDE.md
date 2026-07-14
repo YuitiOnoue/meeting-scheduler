@@ -169,7 +169,6 @@ These were found during the Phase 1–3 audit and intentionally deferred rather 
 
 - **No admin-role-check middleware exists.** `POST/PUT/DELETE /rooms` are completely unauthenticated/unrestricted, and `DELETE /reservations/:id` only allows the owning user — admins cannot yet create the intended "cancel others' reservations" capability. Needs a `requireAdmin` (or similar) middleware applied to the right routes.
 - **`POST /auth/register` accepts a client-supplied `role`** with no restriction, so a caller can self-assign `role: "admin"`.
-- **No `.env.example` committed** — a fresh clone needs `DB_HOST`/`DB_PORT`/`DB_USER`/`DB_PASSWORD`/`DB_NAME` and `JWT_SECRET` set manually before `npm run dev`/`npm run migrate`/`npm run seed` will work.
 
 ### Phase 4 — Node.js: QR Code Generation
 
