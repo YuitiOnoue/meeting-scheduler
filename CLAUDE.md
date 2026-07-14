@@ -3,6 +3,7 @@
 A study project to learn Node.js, Angular, and Docker by building a full-stack meeting room booking application.
 
 ## Learning Goals
+
 - **Node.js / Express** — REST API design, middleware, routing, JWT auth, DB integration
 - **Angular** — Components, services, routing, reactive forms, HTTP client
 - **Docker** — Containerization, docker-compose, multi-service networking
@@ -10,22 +11,30 @@ A study project to learn Node.js, Angular, and Docker by building a full-stack m
 ## Project: Meeting Room Scheduler
 
 ### Tech Stack
-| Layer     | Technology              |
-|-----------|-------------------------|
-| Frontend  | Angular                 |
-| Backend   | Node.js + Express       |
-| Database  | PostgreSQL              |
-| Infra     | Docker + docker-compose |
 
-## Project Structure (target)
+| Layer    | Technology              |
+| -------- | ----------------------- |
+| Frontend | Angular                 |
+| Backend  | Node.js + Express       |
+| Database | PostgreSQL              |
+| Infra    | Docker + docker-compose |
+
+## Project Structure
+
 ```
 meeting-scheduler/
-├── api/          # Node.js/Express backend
-├── web/          # Angular frontend
-└── docker-compose.yml
+├── api/                      # Node.js/Express backend
+│   ├── migrations/           # node-pg-migrate migrations
+│   └── src/
+│       ├── routes/           # rooms.js, auth.js, reservations.js
+│       ├── middleware/       # authenticate.js
+│       └── db/                # db.js (pg Pool), schema.sql, seed.js
+├── web/                      # Angular frontend — not started yet (target)
+└── docker-compose.yml        # currently only defines the `db` service — api/ui services are target (Phase 9)
 ```
 
 ### Features
+
 - User authentication (register / login via JWT)
 - Room management (CRUD — name, capacity, resources, details)
 - Booking / reservations (create, view, cancel time-slot bookings)
@@ -39,6 +48,7 @@ meeting-scheduler/
 ## Data Models
 
 ### Room
+
 ```json
 {
   "id": "uuid",
@@ -51,6 +61,7 @@ meeting-scheduler/
 ```
 
 ### Reservation
+
 ```json
 {
   "id": "uuid",
@@ -64,6 +75,7 @@ meeting-scheduler/
 ```
 
 ### User
+
 ```json
 {
   "id": "uuid",
@@ -74,117 +86,141 @@ meeting-scheduler/
 }
 ```
 
-
 ---
+
 ## API Endpoints
 
-| Method | Route | Description |
-|--------|-------|-------------|
-| GET | `/rooms` | List all rooms with capacity |
-| POST | `/rooms` | Create a room |
-| GET | `/rooms/:id` | Get room details |
-| PUT | `/rooms/:id` | Update room details |
-| DELETE | `/rooms/:id` | Delete a room |
-| GET | `/rooms/available?date=&startTime=&endTime=` | List rooms free in that slot |
-| GET | `/rooms/:id/qrcode` | Returns QR code PNG for the room's booking URL |
-| GET | `/reservations` | List all reservations |
-| POST | `/reservations` | Create a reservation |
-| DELETE | `/reservations/:id` | Cancel a reservation |
-| GET | `/reservations?roomId=&date=` | Get reservations for a room on a date |
-| POST | `/auth/register` | Create a user account |
-| POST | `/auth/login` | Authenticate and return a JWT token |
-| GET | `/auth/me` | Return current authenticated user (protected) |
+| Method | Route                                        | Description                                    |
+| ------ | -------------------------------------------- | ---------------------------------------------- |
+| GET    | `/rooms`                                     | List all rooms with capacity                   |
+| POST   | `/rooms`                                     | Create a room                                  |
+| GET    | `/rooms/:id`                                 | Get room details                               |
+| PUT    | `/rooms/:id`                                 | Update room details                            |
+| DELETE | `/rooms/:id`                                 | Delete a room                                  |
+| GET    | `/rooms/available?date=&startTime=&endTime=` | List rooms free in that slot                   |
+| GET    | `/rooms/:id/qrcode`                          | Returns QR code PNG for the room's booking URL |
+| GET    | `/reservations`                              | List all reservations                          |
+| POST   | `/reservations`                              | Create a reservation                           |
+| DELETE | `/reservations/:id`                          | Cancel a reservation                           |
+| GET    | `/reservations?roomId=&date=`                | Get reservations for a room on a date          |
+| POST   | `/auth/register`                             | Create a user account                          |
+| POST   | `/auth/login`                                | Authenticate and return a JWT token            |
+| GET    | `/auth/me`                                   | Return current authenticated user (protected)  |
 
 ---
 
 ## Frontend Views
 
-| View | Route | Description |
-|------|-------|-------------|
-| Dashboard | `/` | Grid of all rooms — shows current occupancy status (free/busy), capacity, next available slot |
-| Room Detail | `/rooms/:id` | Hourly timeline for the day, existing reservations, book button |
-| Book Room | `/rooms/:id/book` | Form: title, organizer, date, start/end hour (with conflict validation) |
-| QR Door Card | `/rooms/:id/door` | Full-screen card with room name, capacity, QR code — optimized for printing |
-| Availability Search | `/search` | Pick date + time range → shows only available rooms |
+| View                | Route             | Description                                                                                   |
+| ------------------- | ----------------- | --------------------------------------------------------------------------------------------- |
+| Dashboard           | `/`               | Grid of all rooms — shows current occupancy status (free/busy), capacity, next available slot |
+| Room Detail         | `/rooms/:id`      | Hourly timeline for the day, existing reservations, book button                               |
+| Book Room           | `/rooms/:id/book` | Form: title, organizer, date, start/end hour (with conflict validation)                       |
+| QR Door Card        | `/rooms/:id/door` | Full-screen card with room name, capacity, QR code — optimized for printing                   |
+| Availability Search | `/search`         | Pick date + time range → shows only available rooms                                           |
 
 ---
 
 ## Phases
 
-### Phase 1 — Node.js: Project Setup & Room Routes
-**Concepts:** npm init, Express, folder structure, routing, JSON middleware, nodemon, dotenv
+> **Note:** Phases 1–3 originally planned a JSON-file data layer (`rooms.json`/`users.json`/`reservations.json` under `src/data/`, read via `fs/promises`). The actual implementation pivoted to PostgreSQL from the start (matching the Tech Stack table above). The steps below have been updated to reflect what was actually built. See "Known gaps (deferred)" after Phase 3 for open items to pick up later.
 
-Steps:
-1. Create `meeting-scheduler/api/` folder, run `npm init`
-2. Install `express`, `nodemon`, `dotenv`, `uuid`
-3. Create structure: `src/routes/`, `src/controllers/`, `src/data/`
-4. Seed `rooms.json` with 4–5 sample rooms
-5. Implement `GET /rooms` and `GET /rooms/:id`
-6. Add `npm run dev` with nodemon
+### Phase 1 — Node.js: Project Setup & Room Routes ✅ done
 
-### Phase 2 — Node.js: Authentication & JWT
+**Concepts:** npm init, Express, routing, dotenv, Postgres, migrations
 
-**Concepts:** bcrypt, JWT, middleware, protected routes, role-based access
+Steps (as actually implemented):
 
-Steps:
+1. Created `meeting-scheduler/api/` folder, ran `npm init`
+2. Installed `express`, `dotenv`, `pg`, `node-pg-migrate` (no `nodemon`/`uuid` — `npm run dev` uses `node --watch src/index.js`, and Postgres generates UUIDs via `pgcrypto`)
+3. Structure used: `src/routes/`, `src/db/` (`db.js`, `schema.sql`, `seed.js`), `migrations/` (not `src/controllers/`/`src/data/`)
+4. Seeded 6 rooms into Postgres via `src/db/seed.js` (`npm run seed`)
+5. Implemented `GET /rooms` and `GET /rooms/:id` in `src/routes/rooms.js` (also `POST`/`PUT`/`DELETE /rooms`, ahead of the original Phase 1 scope)
+6. `npm run dev` runs `node --watch src/index.js` for auto-restart
 
-1. Install `bcrypt`, `jsonwebtoken`
-2. Seed `users.json` with one admin and one regular user
-3. Implement `POST /auth/register` — hash password with bcrypt, save user
-4. Implement `POST /auth/login` — verify password, return signed JWT
-5. Implement `GET /auth/me` — protected route using an `authenticate` middleware
-6. Add role-checking middleware for admin-only routes (room creation/deletion)
+### Phase 2 — Node.js: Authentication & JWT ✅ mostly done
 
-### Phase 3 — Node.js: Reservations & Availability Logic
-**Concepts:** async file I/O with `fs/promises`, business logic, query params, conflict detection
+**Concepts:** bcryptjs, JWT, middleware, protected routes, role-based access
 
-Steps:
-1. Seed `reservations.json`
-2. Implement `POST /reservations` with hour-conflict validation (no double booking)
-3. Implement `DELETE /reservations/:id`
-4. Implement `GET /rooms/available?date=&startHour=&endHour=` — filter rooms with no conflicting reservations
-5. Implement `GET /reservations?roomId=&date=` for the room detail view
+Steps (as actually implemented):
+
+1. Installed `bcryptjs` (not `bcrypt`), `jsonwebtoken`
+2. `src/db/seed.js` seeds one admin user into Postgres; there is no seeded regular user — regular users are expected to self-register via `POST /auth/register`
+3. Implemented `POST /auth/register` — hash password with bcryptjs, save user
+4. Implemented `POST /auth/login` — verify password, return signed JWT
+5. Implemented `GET /auth/me` — protected route using `src/middleware/authenticate.js` (has unit tests)
+6. **Not yet implemented (deferred):** role-checking middleware for admin-only routes — see "Known gaps" below
+
+### Phase 3 — Node.js: Reservations & Availability Logic ✅ done
+
+**Concepts:** SQL queries via `pg`, business logic, query params, conflict detection
+
+Steps (as actually implemented):
+
+1. No reservation seed data — reservations are created live through the API
+2. Implemented `POST /reservations` in `src/routes/reservations.js` with a half-open-interval overlap conflict check (409 on conflict), auth-protected
+3. Implemented `DELETE /reservations/:id` — auth-protected, but currently restricted to the reservation's own owner (see "Known gaps")
+4. Implemented `GET /rooms/available?date=&startTime=&endTime=` — reuses the same overlap-exclusion query
+5. Implemented `GET /reservations?roomId=&date=` for the room detail view (note: there is no "list all" mode — calling it without both query params returns an empty result, not all reservations)
+
+## Known gaps (deferred)
+
+These were found during the Phase 1–3 audit and intentionally deferred rather than fixed, to keep moving on Phase 4:
+
+- **No admin-role-check middleware exists.** `POST/PUT/DELETE /rooms` are completely unauthenticated/unrestricted, and `DELETE /reservations/:id` only allows the owning user — admins cannot yet create the intended "cancel others' reservations" capability. Needs a `requireAdmin` (or similar) middleware applied to the right routes.
+- **`POST /auth/register` accepts a client-supplied `role`** with no restriction, so a caller can self-assign `role: "admin"`.
+- **No `.env.example` committed** — a fresh clone needs `DB_HOST`/`DB_PORT`/`DB_USER`/`DB_PASSWORD`/`DB_NAME` and `JWT_SECRET` set manually before `npm run dev`/`npm run migrate`/`npm run seed` will work.
 
 ### Phase 4 — Node.js: QR Code Generation
+
 **Concepts:** npm packages, binary responses, URL design
 
 Steps:
+
 1. Install `qrcode` package
 2. Implement `GET /rooms/:id/qrcode` — generates a QR code PNG pointing to `http://localhost:4200/rooms/:id/book`
 3. Serve as `image/png` buffer response
 4. Test by opening the URL in the browser — scan with phone to verify redirect
 
 ### Phase 5 — Docker: Containerize the API
+
 **Concepts:** Dockerfile, image layers, `.dockerignore`, ARG/ENV, port mapping
 
 Steps:
+
 1. Write `Dockerfile` for the Node.js API (multi-stage optional)
 2. Add `.dockerignore` (exclude `node_modules`, `*.json` data files)
 3. Build and run: `docker build` → `docker run -p 3000:3000`
 4. Mount `src/data/` as a volume so JSON files persist between container restarts
 
 ### Phase 6 — Angular: Project Setup & Dashboard
+
 **Concepts:** Angular CLI, components, services, `HttpClient`, `*ngFor`, `*ngIf`, pipes
 
 Steps:
+
 1. Scaffold: `ng new meeting-scheduler-ui --routing --style=scss`
 2. Create `RoomService` with `HttpClient` — methods: `getRooms()`, `getRoom(id)`, `getAvailable(params)`
 3. Build `DashboardComponent` — card grid showing each room's status (free/busy/capacity)
 4. Add a `RoomStatusPipe` to compute and format current occupancy
 
 ### Phase 7 — Angular: Room Detail & Booking Form
+
 **Concepts:** Reactive forms, route params, form validation, conditional UI
 
 Steps:
+
 1. Build `RoomDetailComponent` — hourly timeline for today showing each reservation block
 2. Build `BookRoomComponent` with a reactive form: title, organizer, date, startHour, endHour
 3. Add client-side validation (end > start, required fields)
 4. On submit, call `POST /reservations` and redirect back to room detail on success
 
 ### Phase 8 — Angular: QR Door Card & Search View
+
 **Concepts:** `<img>` binding to API URL, print CSS, query params in routing
 
 Steps:
+
 1. Build `DoorCardComponent` at `/rooms/:id/door`:
    - Room name, capacity, amenities
    - `<img [src]="'/api/rooms/' + id + '/qrcode'">` renders the QR code
@@ -194,9 +230,11 @@ Steps:
    - On search, call `GET /rooms/available` and display matching rooms as cards
 
 ### Phase 9 — Docker Compose: Full Stack
+
 **Concepts:** `docker-compose.yml`, service networking, build context, volumes, depends_on
 
 Steps:
+
 1. Write `docker-compose.yml` with services: `api` and `ui`
 2. Configure `ui` to proxy `/api` requests to the `api` service by name
 3. Add a named volume for the API's `src/data/` folder
