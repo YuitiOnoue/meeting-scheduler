@@ -4,9 +4,9 @@ services:
     environment:
       POSTGRES_USER: scheduler
       POSTGRES_PASSWORD: scheduler
-      POSGRESS_DB: scheduler
+      POSTGRES_DB: scheduler
     ports:
-      - "5432:5432"
+      - '5432:5432'
     volumes:
       - db_data:/var/lib/postgresql/data
 
