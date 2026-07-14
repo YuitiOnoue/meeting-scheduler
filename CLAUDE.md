@@ -183,14 +183,17 @@ Steps:
 
 ### Phase 5 — Docker: Containerize the API
 
-**Concepts:** Dockerfile, image layers, `.dockerignore`, ARG/ENV, port mapping
+**Concepts:** Dockerfile, image layers, `.dockerignore`, ARG/ENV, port mapping, service networking, healthchecks
 
 Steps:
 
 1. Write `Dockerfile` for the Node.js API (multi-stage optional)
 2. Add `.dockerignore` (exclude `node_modules`, `*.json` data files)
 3. Build and run: `docker build` → `docker run -p 3000:3000`
-4. Mount `src/data/` as a volume so JSON files persist between container restarts
+4. ~~Mount `src/data/` as a volume so JSON files persist between container restarts~~ — stale (JSON-era plan). The API is stateless; only Postgres needs a volume, which `docker-compose.yml` already has (`db_data`)
+5. Harden the Dockerfile: `npm install` → `npm ci --omit=dev` (deterministic installs from the lockfile); pin `FROM node:22.14.0-alpine` to match `.nvmrc`; add `USER node` (drop root); add a comment documenting required runtime env vars (`DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`, `JWT_SECRET`, `FRONTEND_URL`); add `*.test.js` to `.dockerignore` so test files aren't copied into the image
+6. Add a `HEALTHCHECK` to `api/Dockerfile` (hitting the existing `GET /health` route) so `depends_on: condition: service_healthy` can be used later
+7. Add an `api` service to the root `docker-compose.yml` (building `api/Dockerfile`), on the same network as `db`, with `DB_HOST=db` — pulled forward from Phase 9 so the API runs fully containerized (`docker compose up --build`) instead of requiring the manual `docker run --network ... -e DB_HOST=db` workaround used to first verify connectivity
 
 ### Phase 6 — Angular: Project Setup & Dashboard
 
@@ -234,11 +237,10 @@ Steps:
 
 Steps:
 
-1. Write `docker-compose.yml` with services: `api` and `ui`
+1. Add a `ui` service to `docker-compose.yml` alongside the `db` and `api` services (`api`+`db` wiring already done in Phase 5)
 2. Configure `ui` to proxy `/api` requests to the `api` service by name
-3. Add a named volume for the API's `src/data/` folder
-4. Add `depends_on: api` to the `ui` service
-5. Run `docker compose up --build` — verify the full app works end-to-end
+3. Add `depends_on: condition: service_healthy` for `ui` → `api` and `api` → `db`, using the `HEALTHCHECK` added to `api/Dockerfile` in Phase 5
+4. Run `docker compose up --build` — verify the full app works end-to-end
 
 ---
 
