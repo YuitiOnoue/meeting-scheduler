@@ -3,14 +3,14 @@ variables:
   - name: baseUrl
     value: http://localhost:3000
   - name: roomId
-    value: 78264b3e-1922-440a-a283-f16c1302f1d9
+    value: 1c53a7f8-34e6-486f-be31-3c00f27ac3cc
   - name: token
-    value: ''
+    value: ""
   - name: date
-    value: '2026-07-11'
+    value: 2026-07-11
   - name: startTime
-    value: '09:00'
+    value: 09:00
   - name: endTime
-    value: '10:00'
+    value: 10:00
   - name: reservationId
-    value: ''
+    value: ""
