@@ -12,14 +12,11 @@ http:
         {
           "roomId": "{{roomId}}",
           "title": "Another meeting",
-          "date": "{{date}}",
-          "startTime": "{{startTime}}",
-          "endTime": "{{endTime}}"
+          "date": "2026-07-15",
+          "organizer": "Henrique",
+          "startTime": "15:00",
+          "endTime": "16:00"
         }
-  auth:
-    type: bearer
-    bearer:
-      token: '{{token}}'
 
 runtime:
   scripts:
