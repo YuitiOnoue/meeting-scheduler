@@ -197,11 +197,11 @@ Steps:
 
 ### Phase 6 — Angular: Project Setup & Dashboard
 
-**Concepts:** Angular CLI, components, services, `HttpClient`, `*ngFor`, `*ngIf`, pipes
+**Concepts:** Angular CLI, standalone components, services, `HttpClient`, `@for`/`@if` built-in control flow (Angular 17+ default — supersedes `*ngFor`/`*ngIf` from the original plan), pipes
 
 Steps:
 
-1. Scaffold: `ng new meeting-scheduler-ui --routing --style=scss`
+1. Scaffold: `ng new web --routing --style=scss` (run from the repo root — folder name matches the `web/` target in Project Structure and the `ui` compose service planned in Phase 9)
 2. Create `RoomService` with `HttpClient` — methods: `getRooms()`, `getRoom(id)`, `getAvailable(params)`
 3. Build `DashboardComponent` — card grid showing each room's status (free/busy/capacity)
 4. Add a `RoomStatusPipe` to compute and format current occupancy
